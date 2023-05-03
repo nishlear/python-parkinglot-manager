@@ -6,129 +6,90 @@ mydb = mysql.connector.connect(
   password="1234",
   database='parking'
 )
-
 cursor = mydb.cursor()
-
-# vehicle
-def addVehicle(plate, type):
-    val = (plate, type)
-    sql = "INSERT INTO Xe VALUES (%s, %s)"
-    cursor.execute(sql, val)
-    mydb.commit()
-
-    print(cursor.rowcount, "xe đã được thêm vào database.")
-
-def removeVehicle(plate):
-    val = (plate)
-    sql = "DELETE FROM Xe WHERE plate = %s"
-    cursor.execute(sql, val)
-    mydb.commit()
-
-    print(cursor.rowcount, "xe đã được xoá khỏi database")
-
-def showVehicle():
-    sql = "SELECT * FROM Xe"
-    cursor.execute(sql)
-    vehicleList = cursor.fetchall()
-
-    for x in vehicleList:
-        print(x)
-
-def updatePlateVehicle(updatedPlate, vehicleType):
-    val = (updatedPlate, vehicleType)
-    sql = "UPDATE Xe SET Plate = %s WHERE vehicleType = %s"
-    cursor.execute(sql, val)
-    mydb.commit()
-
-    print("Thông tin biển số đã được thay đổi")
-
-def updateTypeVehicle(plate, updatedVehicleType):
-    val = (updatedVehicleType, plate)
-    sql = "UPDATE Xe SET vehicleType = %s WHERE plate = %s"
-    cursor.execute(sql, val)
-    mydb.commit()
-
-    print("Thông tin loại xe đã được thay đổi")
 
 # staff
 def addStaff(name, phone):
-    val = (None, name, phone)
-    sql = "INSERT INTO NhanVien VALUES (%s, %s, %s)"
+    sql = "INSERT INTO staff (name, phone) VALUES (%s, %s)"
+    val = (name, phone)
     cursor.execute(sql, val)
     mydb.commit()
+    print(f"Nhân viên {name} đã được thêm vào.")
 
-    print(cursor.rowcount, "nhân viên đã được thêm vào database.")
-
-def removeStaff(id):
-    val = (id,)
-    sql = "DELETE FROM NhanVien WHERE workerID = %s"
+def removeStaff(staffID):
+    sql = "DELETE FROM staff WHERE staffID = %s"
+    val = (staffID,)
     cursor.execute(sql, val)
     mydb.commit()
-
-    print(cursor.rowcount, "nhân viên đã được xoá khỏi database")
+    print(f"Nhân viên có ID {staffID} đã được xoá.")
 
 def showStaff():
-    sql = "SELECT * FROM NhanVien"
+    cursor.execute("SELECT * FROM staff")
+    result = cursor.fetchall()
+    for row in result:
+        print(row)
+
+def updateStaff(staffID, name=None, plate=None):
+    sql = "UPDATE staff SET "
+    updates = []
+
+    if name is not None:
+        updates.append(f"name='{name}'")
+    if plate is not None:
+        updates.append(f"plate='{plate}'")
+
+    if len(updates) == 0:
+        return # nothing to update
+
+    sql += ",".join(updates) + f" WHERE staffID={staffID}"
     cursor.execute(sql)
-    staffList = cursor.fetchall()
+    mydb.commit()
+    print(f"Staff with ID {staffID} updated successfully")
 
-    for x in staffList:
-        print(x)
-
-def updateStaffInfo(id, name, phone):
-    val = (name, phone, id)
-    sql = "UPDATE NhanVien SET name = %s, phone = %s WHERE workerID = %s"
+# member
+def addMember(name, plate):
+    sql = "INSERT INTO member (name, plate) VALUES (%s, %s)"
+    val = (name, plate)
     cursor.execute(sql, val)
     mydb.commit()
+    print(f"Thành viên {name} có biển số {plate} đã được lưu.")
 
-    print("Thông tin nhân viên đã được thay đổi")
-
-# nguoi gui xe 
-
-def addPerson(phone, name):
-    val = (phone, name)
-    sql = "INSERT INTO NguoiGuiXe VALUES (%s, %s)"
+def removeMember(memberID):
+    sql = "DELETE FROM member WHERE memberID = %s"
+    val = (memberID,)
     cursor.execute(sql, val)
     mydb.commit()
+    print(f"Thành viên có ID {memberID} đã được xoá.")
 
-    print(cursor.rowcount, "người gửi xe đã được thêm vào database")
+def updateMember(memberID, name=None, plate=None):
+    sql = "UPDATE member SET "
+    updates = []
 
-def removePerson(phone):
-    val = (phone)
-    sql = "DELETE FROM NguoiGuiXe WHERE Phone = %s"
-    cursor.execute(sql, val)
-    mydb.commit()
+    if name is not None:
+        updates.append(f"name='{name}'")
+    if plate is not None:
+        updates.append(f"plate='{plate}'")
 
-    print(cursor.rowcount, "người gửi xe đã được xoá khỏi database")
+    if len(updates) == 0:
+        return # nothing to update
 
-def showPerson():
-    sql = "SELECT * FROM NguoiGuiXe"
+    sql += ",".join(updates) + f" WHERE memberID={memberID}"
     cursor.execute(sql)
-    personList = cursor.fetchall()
-
-    for x in personList:
-        print(x)
-    
-def updatePersonName(phone, name):
-    val = (name, phone)
-    sql = "UPDATE NguoiGuiXe SET name = %s WHERE Phone = %s"
-    cursor.execute(sql, val)
     mydb.commit()
+    print(f"Member with ID {memberID} updated successfully")
 
-    print("Tên người gửi xe đã được thay đổi")
+def showMember():
+    sql = "SELECT * FROM member"
+    cursor.execute(sql)
+    result = cursor.fetchall()
 
-def updatePersonName(phone, name):
-    val = (name, phone)
-    sql = "UPDATE NhanVien SET Phone = %s WHERE Name = %s"
-    cursor.execute(sql, val)
-    mydb.commit()
+    for row in result:
+        print(row)
 
-    print("SDT người gửi xe đã được thay đổi")
-
-# ve gui xe
-def addTicket(staffID, cash, plate):
-    val = (None, staffID, cash, plate)
-    sql = "INSERT INTO VeGuiXe VALUES (%s, %s, %s, %s)"
+# ticket
+def addTicket(staffID, memberID, cash, plate, vehicletype, time_in, time_out):
+    val = (None, staffID, memberID, cash, plate, vehicletype, time_in, time_out)
+    sql = "INSERT INTO ticket VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
     cursor.execute(sql, val)
     mydb.commit()
 
@@ -136,25 +97,48 @@ def addTicket(staffID, cash, plate):
 
 def removeTicket(ticketID):
     val = (ticketID,)
-    sql = "DELETE FROM VeGuiXe WHERE ticketID = %s"
+    sql = "SELECT plate FROM ticket WHERE ticketID = %s"
+    plate = cursor.fetchone()[0]
+
+    sql = "DELETE FROM ticket WHERE ticketID = %s"
     cursor.execute(sql, val)
     mydb.commit()
 
-    print(cursor.rowcount, "vé gửi xe đã được xoá khỏi database")
+    print("Vé gửi xe mang biển số" + plate + "đã được xoá khỏi database")
 
 def showTicket():
-    sql = "SELECT * FROM VeGuiXe"
+    sql = "SELECT * FROM ticket"
     cursor.execute(sql)
-    ticketList = cursor.fetchall()
+    result = cursor.fetchall()
 
-    for x in ticketList:
+    for x in result:
         print(x)
 
-def updateTicket(workerID, cash, plate):
-    val = (workerID, cash, plate)
-    sql = "UPDATE VeGuiXe SET workerID = %s, cash = %s WHERE plate = %s;"
-    cursor.execute(sql, val)
-    mydb.commit()
+def updateTicket(ticketID, staffID=None, memberID=None, cash=None, plate=None, vehicletype=None, time_in=None, time_out=None):
+    sql = "UPDATE ticket SET "
+    updates = []
 
-    print("Thông tin vé gửi xe đã được thay đổi")
+    if staffID is not None:
+        updates.append(f"staffID={staffID}")
+    if memberID is not None:
+        updates.append(f"memberID={memberID}")
+    if cash is not None:
+        updates.append(f"cash={cash}")
+    if plate is not None:
+        updates.append(f"plate='{plate}'")
+    if vehicletype is not None:
+        updates.append(f"type={vehicletype}")
+    if time_in is not None:
+        updates.append(f"time_in='{time_in}'")
+    if time_out is not None:
+        updates.append(f"time_out='{time_out}'")
+
+    if len(updates) == 0:
+        return # không có gì để update
+
+    sql += ",".join(updates) + f" WHERE ticketID={ticketID}"
+    cursor.execute(sql)
+    mydb.commit()
+    print(f"Vé gửi xe với ID {ticketID} đã được update thành công")
+
 
