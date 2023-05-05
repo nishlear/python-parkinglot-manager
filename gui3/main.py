@@ -1,5 +1,4 @@
 import mysql.connector
-import connect
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtGui import QPixmap
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
@@ -11,6 +10,7 @@ from PyQt5.uic import loadUi
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import connect
 
 
 class Login(QMainWindow):
@@ -44,12 +44,14 @@ class ThanhVien(QMainWindow):
         # con = mydb.cursor()
         # con.execute('Select * from member')
         # data = con.fetchall()
+
         data = connect.showMember()
         self.tableWidget.setRowCount(len(data))
         for i, row in enumerate(data):
             for j, col in enumerate(row):
                 item = QTableWidgetItem(str(col))
                 self.tableWidget.setItem(i, j, item)
+                
         self.Nhan.clicked.connect(self.Them)
         self.pushButton_2.clicked.connect(self.Xoa)
         self.pushButton_5.clicked.connect(self.TimKiem)
@@ -58,34 +60,64 @@ class ThanhVien(QMainWindow):
         self.check = 0
 
     def handle_cell_changed(self, row, column):
-        # TODO: change this
+        # TODO: change this 
         item = self.tableWidget.item(row, column)
         if self.check == 0:
-            column_name = self.tableWidget.horizontalHeaderItem(column).text()
-            con.execute(f"SELECT {column_name} FROM member")
-            bd = con.fetchall()
+            column = item.column()
+            bd = connect.showMember()
             if item is not None and item.text().strip() != "":
                 new_value = item.text()
-                if column_name == "ID":
+                if column == 0:
                     for i in range(self.tableWidget.rowCount()):
                         if i != row and self.tableWidget.item(i, 0).text() == new_value:
                             QMessageBox.warning(
                                 self, "Lỗi", "ID đã tồn tại, vui lòng nhập ID khác.")
                             item.setText(str(bd[row][0]))
                             return
-                try:
-                    sql = f"UPDATE member SET {column_name} = %s WHERE {column_name} = %s"
-                    val = (new_value, bd[row][0])
-                    con.execute(sql, val)
-                    mydb.commit()
-                except mysql.connector.Error as error:
-                    QMessageBox.warning(self, "Thông Báo",
-                                        "Không thể sửa thông tin")
-                    old_value = bd[row][0]
-                    item.setText(str(old_value))
+                if column == 1:
+                    try:
+                        connect.updateMember(bd[row][0], name=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
+                if column == 2:
+                    try:
+                        connect.updateMember(bd[row][0], plate=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
             else:
-                old_value = bd[row][0]
+                old_value = bd[row][column]
                 item.setText(str(old_value))
+        
+                # if self.check == 0:
+                #     column_name = self.tableWidget.horizontalHeaderItem(column).text()
+                #     con.execute(f"SELECT {column_name} FROM member")
+        #     bd = con.fetchall()
+        #     if item is not None and item.text().strip() != "":
+        #         new_value = item.text()
+        #         if column_name == "ID":
+        #             for i in range(self.tableWidget.rowCount()):
+        #                 if i != row and self.tableWidget.item(i, 0).text() == new_value:
+        #                     QMessageBox.warning(
+        #                         self, "Lỗi", "ID đã tồn tại, vui lòng nhập ID khác.")
+        #                     item.setText(str(bd[row][0]))
+        #                     return
+        #         try:
+        #             sql = f"UPDATE member SET {column_name} = %s WHERE {column_name} = %s"
+        #             val = (new_value, bd[row][0])
+        #             con.execute(sql, val)
+        #             mydb.commit()
+        #         except mysql.connector.Error as error:
+        #             QMessageBox.warning(self, "Thông Báo",
+        #                                 "Không thể sửa thông tin")
+        #             old_value = bd[row][0]
+        #             item.setText(str(old_value))
+        #     else:
+        #         old_value = bd[row][0]
+        #         item.setText(str(old_value))
 
     def Them(self):
         them_dialog = QDialog(self)
@@ -114,16 +146,22 @@ class ThanhVien(QMainWindow):
     #   val = (ID,HoTen,Plate)
     #   con.execute(sql,val)
     #   mydb.commit()
-
-            currentRowCount = self.tableWidget.rowCount()
-            self.tableWidget.setRowCount(currentRowCount + 1)
-    #   self.tableWidget.setItem(currentRowCount, 0, QTableWidgetItem(ID))
-            self.tableWidget.setItem(
-                currentRowCount, 1, QTableWidgetItem(HoTen))
-            self.tableWidget.setItem(
-                currentRowCount, 2, QTableWidgetItem(Plate))
-            QMessageBox.information(
-                self, "Thông Báo", "Thêm thành viên thành công")
+            data = connect.showMember()
+            self.tableWidget.setRowCount(0)
+            self.tableWidget.setRowCount(len(data))
+            for i, row in enumerate(data):
+                for j, col in enumerate(row):
+                    item = QTableWidgetItem(str(col))
+                    self.tableWidget.setItem(i, j, item)
+    #         currentRowCount = self.tableWidget.rowCount()
+    #         self.tableWidget.setRowCount(currentRowCount + 1)
+    # #   self.tableWidget.setItem(currentRowCount, 0, QTableWidgetItem(ID))
+    #         self.tableWidget.setItem(
+    #             currentRowCount, 1, QTableWidgetItem(HoTen))
+    #         self.tableWidget.setItem(
+    #             currentRowCount, 2, QTableWidgetItem(Plate))
+    #         QMessageBox.information(
+    #             self, "Thông Báo", "Thêm thành viên thành công")
             self.check = 0
         else:
             QMessageBox.warning(self, "Thông Báo", "Thêm thành viên thất bại")
@@ -183,6 +221,8 @@ class ThanhVien(QMainWindow):
                 for j, col in enumerate(row):
                     item = QTableWidgetItem(str(col))
                     self.tableWidget.setItem(i, j, item)
+
+            
         self.check = 0
 
 
@@ -199,7 +239,7 @@ class NhanVien(QMainWindow):
         # con = mydb.cursor()
         # con.execute('Select * from staff')
         # data = con.fetchall()
-        data = connect.showStaff()
+        data = connect.showStaffwithAccount()
         self.tableWidget.setRowCount(len(data))
         for i, row in enumerate(data):
             for j, col in enumerate(row):
@@ -215,31 +255,76 @@ class NhanVien(QMainWindow):
     def handle_cell_changed(self, row, column):
         item = self.tableWidget.item(row, column)
         if self.check == 0:
-            column_name = self.tableWidget.horizontalHeaderItem(column).text()
-            con.execute(f"SELECT {column_name} FROM staff")
-            bd = con.fetchall()
+            column = item.column()
+            bd = connect.showStaffwithAccount()
             if item is not None and item.text().strip() != "":
                 new_value = item.text()
-                if column_name == "workerID":
+                if column == 0:
                     for i in range(self.tableWidget.rowCount()):
                         if i != row and self.tableWidget.item(i, 0).text() == new_value:
                             QMessageBox.warning(
                                 self, "Lỗi", "ID đã tồn tại, vui lòng nhập ID khác.")
                             item.setText(str(bd[row][0]))
                             return
-                try:
-                    sql = f"UPDATE member SET {column_name} = %s WHERE {column_name} = %s"
-                    val = (new_value, bd[row][0])
-                    con.execute(sql, val)
-                    mydb.commit()
-                except mysql.connector.Error as error:
-                    QMessageBox.warning(self, "Thông Báo",
-                                        "Không thể sửa thông tin")
-                    old_value = bd[row][0]
-                    item.setText(str(old_value))
+                if column == 1:
+                    try:
+                        connect.updateStaff(bd[row][0], name=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
+                if column == 2:
+                    try:
+                        connect.updateStaff(bd[row][0], phone=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
+                if column == 3:
+                    try:
+                        connect.updateAccount(bd[row][0], username=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
+                if column == 4:
+                    try:
+                        connect.updateAccount(bd[row][0], password=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
             else:
-                old_value = bd[row][0]
+                old_value = bd[row][column]
                 item.setText(str(old_value))
+        
+        # item = self.tableWidget.item(row, column)
+        # if self.check == 0:
+        #     column_name = self.tableWidget.horizontalHeaderItem(column).text()
+        #     con.execute(f"SELECT {column_name} FROM staff")
+        #     bd = con.fetchall()
+        #     if item is not None and item.text().strip() != "":
+        #         new_value = item.text()
+        #         if column_name == "workerID":
+        #             for i in range(self.tableWidget.rowCount()):
+        #                 if i != row and self.tableWidget.item(i, 0).text() == new_value:
+        #                     QMessageBox.warning(
+        #                         self, "Lỗi", "ID đã tồn tại, vui lòng nhập ID khác.")
+        #                     item.setText(str(bd[row][0]))
+        #                     return
+        #         try:
+        #             sql = f"UPDATE member SET {column_name} = %s WHERE {column_name} = %s"
+        #             val = (new_value, bd[row][0])
+        #             con.execute(sql, val)
+        #             mydb.commit()
+        #         except mysql.connector.Error as error:
+        #             QMessageBox.warning(self, "Thông Báo",
+        #                                 "Không thể sửa thông tin")
+        #             old_value = bd[row][0]
+        #             item.setText(str(old_value))
+        #     else:
+        #         old_value = bd[row][0]
+        #         item.setText(str(old_value))
 
     def Them(self):
         them_dialog = QDialog(self)
@@ -249,8 +334,8 @@ class NhanVien(QMainWindow):
             #   ID = them_dialog.lineEdit_10.text().strip()
             HoTen = them_dialog.lineEdit_2.text().strip()
             SDT = them_dialog.lineEdit_3.text().strip()
-            TK = them_dialog.lineEdit_4.text().strip()
-            MK = them_dialog.lineEdit_5.text().strip()
+            # TK = them_dialog.lineEdit_4.text().strip()
+            # MK = them_dialog.lineEdit_5.text().strip()
             if not HoTen or not SDT:
                 QMessageBox.warning(self, "Thông Báo",
                                     "Vui lòng nhập đầy đủ thông tin")
@@ -265,20 +350,16 @@ class NhanVien(QMainWindow):
                 QMessageBox.warning(self, "Thông Báo", "Nhân viên đã tồn tại.")
                 return
             self.check = 1
-            currentRowCount = self.tableWidget.rowCount()
-            self.tableWidget.setRowCount(currentRowCount + 1)
-    #   self.tableWidget.setItem(currentRowCount, 0, QTableWidgetItem(ID))
-            self.tableWidget.setItem(
-                currentRowCount, 1, QTableWidgetItem(HoTen))
-            self.tableWidget.setItem(currentRowCount, 2, QTableWidgetItem(SDT))
-            self.tableWidget.setItem(currentRowCount, 3, QTableWidgetItem(TK))
-            self.tableWidget.setItem(currentRowCount, 4, QTableWidgetItem(MK))
 
-    #   sql = "INSERT INTO staff (staffID, name, phone, ID,passw) VALUES (%s, %s, %s,%s,%s)"
-    #   val = (ID, HoTen, SDT,TK,MK)
+            data = connect.showStaffwithAccount()
+            self.tableWidget.setRowCount(0)
+            self.tableWidget.setRowCount(len(data))
+            for i, row in enumerate(data):
+                for j, col in enumerate(row):
+                    item = QTableWidgetItem(str(col))
+                    self.tableWidget.setItem(i, j, item)
+        
             try:
-                #    con.execute(sql,val)
-                #    mydb.commit()
                 connect.addStaffwithAccount(HoTen, SDT)
             except mysql.connector.Error as error:
                 QMessageBox.warning(self, "Thông Báo",
@@ -338,8 +419,9 @@ class NhanVien(QMainWindow):
                         item = QTableWidgetItem(str(col))
                         self.tableWidget.setItem(i, j, item)
         else:
-            con.execute('Select * from staff')
-            data = con.fetchall()
+            # con.execute('Select * from staff')
+            # data = con.fetchall()
+            data = connect.showStaffwithAccount()
             self.tableWidget.setRowCount(0)
             self.tableWidget.setRowCount(len(data))
             for i, row in enumerate(data):
@@ -347,7 +429,6 @@ class NhanVien(QMainWindow):
                     item = QTableWidgetItem(str(col))
                     self.tableWidget.setItem(i, j, item)
         self.check = 0
-
 
 class VeXe(QMainWindow):
     def __init__(self):
@@ -380,31 +461,97 @@ class VeXe(QMainWindow):
     def handle_cell_changed(self, row, column):
         item = self.tableWidget.item(row, column)
         if self.check == 0:
-            column_name = self.tableWidget.horizontalHeaderItem(column).text()
-            con.execute(f"SELECT {column_name} FROM ticket")
-            bd = con.fetchall()
+            column = item.column()
+            bd = connect.showTicket()
             if item is not None and item.text().strip() != "":
                 new_value = item.text()
-                if column_name == "ID":
+                if column == 0:
                     for i in range(self.tableWidget.rowCount()):
                         if i != row and self.tableWidget.item(i, 0).text() == new_value:
                             QMessageBox.warning(
                                 self, "Lỗi", "ID đã tồn tại, vui lòng nhập ID khác.")
                             item.setText(str(bd[row][0]))
                             return
-                try:
-                    sql = f"UPDATE ticket SET {column_name} = %s WHERE {column_name} = %s"
-                    val = (new_value, bd[row][0])
-                    con.execute(sql, val)
-                    mydb.commit()
-                except mysql.connector.Error as error:
-                    QMessageBox.warning(self, "Thông Báo",
-                                        "Không thể sửa thông tin")
-                    old_value = bd[row][0]
-                    item.setText(str(old_value))
+                if column == 1:
+                    try:
+                        connect.updateTicket(bd[row][0], staffID=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
+                if column == 2:
+                    try:
+                        connect.updateTicket(bd[row][0], memberID=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
+                if column == 3:
+                    try:
+                        connect.updateTicket(bd[row][0], cash=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
+                if column == 4:
+                    try:
+                        connect.updateTicket(bd[row][0], plate=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
+                if column == 5:
+                    try:
+                        connect.updateTicket(bd[row][0], vehicletype=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
+                if column == 6:
+                    try:
+                        connect.updateTicket(bd[row][0], time_in=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
+                if column == 7:
+                    try:
+                        connect.updateMember(bd[row][0], time_out=new_value)
+                    except mysql.connector.Error as error:
+                        QMessageBox.warning(self, "Thông Báo", "Không thể sửa thông tin")
+                        old_value = bd[row][column]
+                        item.setText(str(old_value))
             else:
-                old_value = bd[row][0]
+                old_value = bd[row][column]
                 item.setText(str(old_value))
+
+        # item = self.tableWidget.item(row, column)
+        # if self.check == 0:
+        #     column_name = self.tableWidget.horizontalHeaderItem(column).text()
+        #     con.execute(f"SELECT {column_name} FROM ticket")
+        #     bd = con.fetchall()
+        #     if item is not None and item.text().strip() != "":
+        #         new_value = item.text()
+        #         if column_name == "ID":
+        #             for i in range(self.tableWidget.rowCount()):
+        #                 if i != row and self.tableWidget.item(i, 0).text() == new_value:
+        #                     QMessageBox.warning(
+        #                         self, "Lỗi", "ID đã tồn tại, vui lòng nhập ID khác.")
+        #                     item.setText(str(bd[row][0]))
+        #                     return
+        #         try:
+        #             sql = f"UPDATE ticket SET {column_name} = %s WHERE {column_name} = %s"
+        #             val = (new_value, bd[row][0])
+        #             con.execute(sql, val)
+        #             mydb.commit()
+        #         except mysql.connector.Error as error:
+        #             QMessageBox.warning(self, "Thông Báo",
+        #                                 "Không thể sửa thông tin")
+        #             old_value = bd[row][0]
+        #             item.setText(str(old_value))
+        #     else:
+        #         old_value = bd[row][0]
+        #         item.setText(str(old_value))
 
     def Them(self):
         them_dialog = QDialog(self)

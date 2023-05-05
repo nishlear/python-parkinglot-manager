@@ -78,27 +78,27 @@
     </attribute>
     <column>
      <property name="text">
-      <string>workerID</string>
+      <string>Mã nhân viên</string>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>name</string>
+      <string>Họ tên</string>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>phone</string>
+      <string>SDT</string>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>ID</string>
+      <string>username</string>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>passw</string>
+      <string>password</string>
      </property>
     </column>
    </widget>
@@ -200,7 +200,7 @@
      <x>0</x>
      <y>0</y>
      <width>1094</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

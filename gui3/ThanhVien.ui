@@ -104,7 +104,7 @@
    <widget class="QTableWidget" name="tableWidget">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>260</x>
       <y>130</y>
       <width>751</width>
       <height>561</height>
@@ -127,17 +127,17 @@
     </attribute>
     <column>
      <property name="text">
-      <string>ID</string>
+      <string>Mã thành viên</string>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>HoTen</string>
+      <string>Họ tên</string>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>Plate</string>
+      <string>Biển số xe</string>
      </property>
     </column>
    </widget>
@@ -187,7 +187,7 @@
      <x>0</x>
      <y>0</y>
      <width>1069</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
