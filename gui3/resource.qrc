@@ -1,0 +1,14 @@
+<RCC>
+  <qresource prefix="newPrefix">
+    <file>icons8-identification-documents-50.png</file>
+    <file>icons8-password-30.png</file>
+    <file>115762_calendar_date_event_month_icon.png</file>
+    <file>3643779_clock_hour_ticker_time_times_icon.png</file>
+    <file>—Pngtree—vintage golden floral retro corner_8215882.png</file>
+    <file>icons8-cash-64.png</file>
+    <file>icons8-licence-plate-50.png</file>
+    <file>icons8-people-in-car-side-view-30.png</file>
+    <file>icons8-manager-94.png</file>
+    <file>4737150351637060430-128.png</file>
+  </qresource>
+</RCC>

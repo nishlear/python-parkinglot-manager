@@ -83,8 +83,15 @@ def showMember():
     cursor.execute(sql)
     result = cursor.fetchall()
 
-    for row in result:
-        print(row)
+    # for row in result:
+    #     print(row)
+    return result
+
+def findMember(x, y):
+    sql = f"SELECT * FROM member WHERE {x} = '{y}'"
+    cursor.execute(sql)
+    data = cursor.fetchall()
+    return data
 
 # ticket
 def addTicket(staffID, memberID, cash, plate, vehicletype, time_in, time_out):

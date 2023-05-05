@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="image">
+    <file>gradient.jpg</file>
+  </qresource>
+</RCC>
