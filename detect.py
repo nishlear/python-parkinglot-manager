@@ -6,9 +6,9 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import connect
 
-# reader = easyocr.Reader(['en'])
-# cap = cv2.VideoCapture(0)
-# model = YOLO('best.pt')
+model = YOLO('best.pt')
+reader = easyocr.Reader(['en'])
+
 def add_detail(frame, detections):
     box_annotate = sv.BoxAnnotator(
         thickness = 1,
@@ -29,7 +29,7 @@ def add_detail(frame, detections):
 def detection_result(frame, yolov8_result):
     detections = sv.Detections.from_yolov8(yolov8_result)
     add_detail(frame, detections)
-    
+
     if (detections):
         roi = detections.xyxy[0]
         x1 = int(roi[0])
@@ -56,6 +56,3 @@ def show_camera_tkinter(frame, video_label):
     video_label.imgtk = img
     video_label.configure(image=img)
 
-# cap = cv2.videoCapture(0)
-# camera_init(cap)
-# plate = detection_result(cap)
