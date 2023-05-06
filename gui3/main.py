@@ -1,18 +1,22 @@
 import mysql.connector
+import numpy as np
+import cv2
 from PyQt5.QtWidgets import QDialog
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QImage
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QThread,QDateTime
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QLabel
 from PyQt5.uic import loadUi
+from mainGUI import Ui_Dialog
 
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import connect
-
-
+import detect
+import qrcode
 class Login(QMainWindow):
     def __init__(self):
         super(Login, self).__init__()
@@ -29,7 +33,6 @@ class Login(QMainWindow):
             widget.setCurrentIndex(1)
         else:
             QMessageBox.warning(self, "Login ouput", "Login failure")
-
 
 class ThanhVien(QMainWindow):
     def __init__(self):
@@ -200,7 +203,7 @@ class ThanhVien(QMainWindow):
         widget.setCurrentIndex(1)
 
     def TimKiem(self):
-        input = self.lineEdit.text().strip()
+        ID = self.lineEdit.text().strip()
         self.check = 1
         if input:
             con.execute("SELECT * FROM member WHERE memberID = %s", (ID,))
@@ -224,7 +227,6 @@ class ThanhVien(QMainWindow):
 
             
         self.check = 0
-
 
 class NhanVien(QMainWindow):
     def __init__(self):
@@ -451,7 +453,7 @@ class VeXe(QMainWindow):
                 self.tableWidget.setItem(i, j, item)
         self.vehicleType = ""
         self.cash = 0
-        self.pushButton_2.clicked.connect(self.Them)
+        # self.pushButton_2.clicked.connect(self.Them)
         self.pushButton_4.clicked.connect(self.Xoa)
         self.pushButton.clicked.connect(self.TimKiem)
         self.tableWidget.cellChanged.connect(self.handle_cell_changed)
@@ -553,81 +555,81 @@ class VeXe(QMainWindow):
         #         old_value = bd[row][0]
         #         item.setText(str(old_value))
 
-    def Them(self):
-        them_dialog = QDialog(self)
-        uic.loadUi('gui3/ThemVX.ui', them_dialog)
-        self.check = 1
-        vehicleType = ""
-        cash = 0
+    # def Them(self):
+    #     them_dialog = QDialog(self)
+    #     uic.loadUi('gui3/ThemVX.ui', them_dialog)
+    #     self.check = 1
+    #     vehicleType = ""
+    #     cash = 0
 
-        def on_radio_button_toggled():
-            nonlocal vehicleType, cash
-            if them_dialog.radioButton.isChecked():
-                vehicleType = them_dialog.radioButton.text()
-                cash = 3000
-                them_dialog.label_9.setText(str(cash)+" VNĐ")
-            elif them_dialog.radioButton_2.isChecked():
-                vehicleType = them_dialog.radioButton_2.text()
-                cash = 4000
-                them_dialog.label_9.setText(str(cash)+" VNĐ")
+    #     def on_radio_button_toggled():
+    #         nonlocal vehicleType, cash
+    #         if them_dialog.radioButton.isChecked():
+    #             vehicleType = them_dialog.radioButton.text()
+    #             cash = 3000
+    #             them_dialog.label_9.setText(str(cash)+" VNĐ")
+    #         elif them_dialog.radioButton_2.isChecked():
+    #             vehicleType = them_dialog.radioButton_2.text()
+    #             cash = 4000
+    #             them_dialog.label_9.setText(str(cash)+" VNĐ")
 
-        def on_combobox_activated(index):
-            item_text = them_dialog.comboBox.itemText(index)
-            con.execute("SELECT Plate FROM member WHERE ID = %s", (item_text,))
-            data = con.fetchall()
-            them_dialog.label_16.setText(str(data[0][0]))
-        them_dialog.radioButton.toggled.connect(on_radio_button_toggled)
-        them_dialog.radioButton_2.toggled.connect(on_radio_button_toggled)
-        con.execute("SELECT memberID FROM member")
-        data = con.fetchall()
-        for i in range(0, len(data)):
-            them_dialog.comboBox.addItem(str(data[i][0]))
-        them_dialog.comboBox.activated.connect(on_combobox_activated)
-        result = them_dialog.exec_()
-        if result == QDialog.Accepted:
-            datetime_obj = them_dialog.dateTimeEdit.dateTime()
-            datetime_str = datetime_obj.toString('yyyy-MM-dd hh:mm:ss')
-            datetime_obj2 = them_dialog.dateTimeEdit_2.dateTime()
-            datetime_str2 = datetime_obj2.toString('yyyy-MM-dd hh:mm:ss')
-            ID = them_dialog.lineEdit_2.text().strip()
-            MaNV = them_dialog.lineEdit_3.text().strip()
-            Plate = them_dialog.label_16.text()
-            MaTV = them_dialog.comboBox.currentText()
-            if not MaTV or not Plate or not ID or not MaNV or (not them_dialog.radioButton.isChecked() and not them_dialog.radioButton_2.isChecked()):
-                QMessageBox.warning(self, "Thông Báo",
-                                    "Vui lòng nhập đầy đủ thông tin")
-                return
-            try:
-                #  sql = "INSERT INTO ticket (ticketID, memberID, Plate, vehicleType, staffID,cash,NgayVao,NgayRa) VALUES (%s, %s, %s,%s,%s,%s,%s,%s)"
-                sql = "INSERT INTO ticket VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-                val = (ID, MaNV, MaTV, cash, Plate,
-                       vehicleType, datetime_str, datetime_str2)
-                con.execute(sql, val)
-                mydb.commit()
-            except mysql.connector.Error as err:
-                QMessageBox.warning(self, "Thông Báo", "Không thể thêm")
-                return
-            currentRowCount = self.tableWidget.rowCount()
-            self.tableWidget.setRowCount(currentRowCount + 1)
-            self.tableWidget.setItem(currentRowCount, 0, QTableWidgetItem(ID))
-            self.tableWidget.setItem(
-                currentRowCount, 1, QTableWidgetItem(MaTV))
-            self.tableWidget.setItem(
-                currentRowCount, 2, QTableWidgetItem(Plate))
-            self.tableWidget.setItem(
-                currentRowCount, 3, QTableWidgetItem(vehicleType))
-            self.tableWidget.setItem(
-                currentRowCount, 4, QTableWidgetItem(MaNV))
-            self.tableWidget.setItem(
-                currentRowCount, 5, QTableWidgetItem(str(cash)))
-            self.tableWidget.setItem(
-                currentRowCount, 6, QTableWidgetItem(datetime_str))
-            self.tableWidget.setItem(
-                currentRowCount, 7, QTableWidgetItem(datetime_str2))
-            QMessageBox.information(self, "Thông Báo", "Thêm vé xe thành công")
-        else:
-            QMessageBox.warning(self, "Thông Báo", "Thêm vé xe thất bại")
-        self.check = 0
+    #     def on_combobox_activated(index):
+    #         item_text = them_dialog.comboBox.itemText(index)
+    #         con.execute("SELECT Plate FROM member WHERE ID = %s", (item_text,))
+    #         data = con.fetchall()
+    #         them_dialog.label_16.setText(str(data[0][0]))
+    #     them_dialog.radioButton.toggled.connect(on_radio_button_toggled)
+    #     them_dialog.radioButton_2.toggled.connect(on_radio_button_toggled)
+    #     con.execute("SELECT memberID FROM member")
+    #     data = con.fetchall()
+    #     for i in range(0, len(data)):
+    #         them_dialog.comboBox.addItem(str(data[i][0]))
+    #     them_dialog.comboBox.activated.connect(on_combobox_activated)
+    #     result = them_dialog.exec_()
+    #     if result == QDialog.Accepted:
+    #         datetime_obj = them_dialog.dateTimeEdit.dateTime()
+    #         datetime_str = datetime_obj.toString('yyyy-MM-dd hh:mm:ss')
+    #         datetime_obj2 = them_dialog.dateTimeEdit_2.dateTime()
+    #         datetime_str2 = datetime_obj2.toString('yyyy-MM-dd hh:mm:ss')
+    #         ID = them_dialog.lineEdit_2.text().strip()
+    #         MaNV = them_dialog.lineEdit_3.text().strip()
+    #         Plate = them_dialog.label_16.text()
+    #         MaTV = them_dialog.comboBox.currentText()
+    #         if not MaTV or not Plate or not ID or not MaNV or (not them_dialog.radioButton.isChecked() and not them_dialog.radioButton_2.isChecked()):
+    #             QMessageBox.warning(self, "Thông Báo",
+    #                                 "Vui lòng nhập đầy đủ thông tin")
+    #             return
+    #         try:
+    #             #  sql = "INSERT INTO ticket (ticketID, memberID, Plate, vehicleType, staffID,cash,NgayVao,NgayRa) VALUES (%s, %s, %s,%s,%s,%s,%s,%s)"
+    #             sql = "INSERT INTO ticket VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+    #             val = (ID, MaNV, MaTV, cash, Plate,
+    #                    vehicleType, datetime_str, datetime_str2)
+    #             con.execute(sql, val)
+    #             # mydb.commit()
+    #         except mysql.connector.Error as err:
+    #             QMessageBox.warning(self, "Thông Báo", "Không thể thêm")
+    #             return
+    #         currentRowCount = self.tableWidget.rowCount()
+    #         self.tableWidget.setRowCount(currentRowCount + 1)
+    #         self.tableWidget.setItem(currentRowCount, 0, QTableWidgetItem(ID))
+    #         self.tableWidget.setItem(
+    #             currentRowCount, 1, QTableWidgetItem(MaTV))
+    #         self.tableWidget.setItem(
+    #             currentRowCount, 2, QTableWidgetItem(Plate))
+    #         self.tableWidget.setItem(
+    #             currentRowCount, 3, QTableWidgetItem(vehicleType))
+    #         self.tableWidget.setItem(
+    #             currentRowCount, 4, QTableWidgetItem(MaNV))
+    #         self.tableWidget.setItem(
+    #             currentRowCount, 5, QTableWidgetItem(str(cash)))
+    #         self.tableWidget.setItem(
+    #             currentRowCount, 6, QTableWidgetItem(datetime_str))
+    #         self.tableWidget.setItem(
+    #             currentRowCount, 7, QTableWidgetItem(datetime_str2))
+    #         QMessageBox.information(self, "Thông Báo", "Thêm vé xe thành công")
+    #     else:
+    #         QMessageBox.warning(self, "Thông Báo", "Thêm vé xe thất bại")
+    #     self.check = 0
 
     def Xoa(self):
         xoa_dialog = QDialog(self)
@@ -685,7 +687,6 @@ class VeXe(QMainWindow):
         widget.setFixedHeight(500)
         widget.setCurrentIndex(1)
 
-
 class Menu(QMainWindow):
     def __init__(self):
         super(Menu, self).__init__()
@@ -694,6 +695,7 @@ class Menu(QMainWindow):
         self.pushButton.clicked.connect(self.EnterDSNNV)
         self.pushButton_3.clicked.connect(self.EnterDSVX)
         self.pushButton_4.clicked.connect(self.EnterDSTV)
+        self.pushButton_6.clicked.connect(self.EnterCAM)
 
     def EXIT(self):
         widget.setFixedWidth(408)
@@ -715,29 +717,124 @@ class Menu(QMainWindow):
         widget.setFixedHeight(700)
         widget.setCurrentIndex(4)
 
+    def EnterCAM(self):
+        widget.setFixedWidth(1021)
+        widget.setFixedHeight(771)
+        widget.setCurrentIndex(5)
 
-app = QApplication(sys.argv)
-widget = QtWidgets.QStackedWidget()
-Login_f = Login()
-NV_f = NhanVien()
+class CameraThread(QThread):
+    signal = pyqtSignal(np.ndarray)
 
-Menu_f = Menu()
-VeXe_f = VeXe()
-ThanhVien_f = ThanhVien()
-mydb = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="1234",
-    database="parking"
-)
-con = mydb.cursor()
-widget.addWidget(Login_f)
-widget.setFixedWidth(408)
-widget.setFixedHeight(500)
-widget.addWidget(Menu_f)
-widget.addWidget(NV_f)
-widget.addWidget(VeXe_f)
-widget.addWidget(ThanhVien_f)
-widget.setCurrentIndex(0)
-widget.show()
-app.exec()
+    def __init__(self):
+        super(CameraThread, self).__init__()
+        self.cap = cv2.VideoCapture(0)
+        self.capture_frame = None
+
+    def run(self):
+        while True:
+            ret, cv_img = self.cap.read()
+            if ret:
+                self.capture_frame = cv_img
+                self.signal.emit(cv_img)
+
+    def get_capture_frame(self):
+        return self.capture_frame
+    
+class MainWindow(QDialog):
+    def __init__(self):
+        super(MainWindow,self).__init__()
+        self.uic = Ui_Dialog()
+        self.uic.setupUi(self)
+        
+        self.selected_staff_id = None
+
+        data = connect.showStaff()
+        for i, name in enumerate(data):
+            self.uic.comboBox.addItem(str(name[1]))
+
+        self.uic.comboBox.currentIndexChanged.connect(self.getStaffName)
+
+        self.thread = CameraThread()
+        self.thread.signal.connect(self.showCamera)
+        self.thread.start()
+
+        self.uic.CAPTURE_BTN.clicked.connect(self.capture_xehoi)
+        self.uic.CAPTURE_BTN_2.clicked.connect(self.capture_xemay)
+        self.uic.CAPTURE_BTN_3.clicked.connect(self.capture_xedap)
+
+        self.pushButton = self.findChild(QtWidgets.QPushButton, "pushButton")
+        self.pushButton.clicked.connect(self.EXIT)
+
+    def getStaffName(self, index):
+        name = self.uic.comboBox.itemText(index)
+        connect.findStaff("name", name)
+        
+
+
+    def EXIT(self):
+        widget.setFixedWidth(850)
+        widget.setFixedHeight(500)
+        widget.setCurrentIndex(1)
+
+    def capture_xehoi(self):
+        self.uic.label_ngaygio.setText(connect.current_time)
+        frame = self.thread.get_capture_frame()
+        plate = detect.detection_result(frame)
+
+        pass
+
+    def capture_xemay(self):
+        pass
+
+    def capture_xedap(self):
+        pass
+
+    # def capture_frame(self):
+    #     # Get the current date and time
+    #     current_time = QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm:ss")
+    #     self.uic.label_ngaygio.setText(current_time)
+
+    #     #save data to file
+    #     f = open('test.txt', 'a')
+    #     f.write(current_time + '\n')
+    #     #Get frame from camera
+    #     frame = self.thread.get_capture_frame()
+    #     #thuat toan cua tac gia tren mang
+    #     if frame is not None:
+    #         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) #frame lay duoc se duoc chuyen sang dang anh co mau
+    #         h, w, ch = img.shape #h la chieu cao, w la chieu rong, ch la color channel
+    #         bytes_per_line = ch * w
+    #         q_img = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
+    #         #display the capture to prt_sc label
+    #         # self.uic.prt_sc.setPixmap(QPixmap.fromImage(q_img))
+
+
+    @pyqtSlot(np.ndarray) #help catch errors at runtime
+    def showCamera(self, cv_img):
+        img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+        h, w, ch = img.shape
+        bytes_per_line = ch * w
+        q_img = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        self.uic.camera.setPixmap(QPixmap.fromImage(q_img))
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    widget = QtWidgets.QStackedWidget()
+    con = connect.mydb
+    Login_f = Login()
+    NV_f = NhanVien()
+    Menu_f = Menu()
+    VeXe_f = VeXe()
+    ThanhVien_f = ThanhVien()
+    Cam_f = MainWindow()
+    widget.addWidget(Login_f)
+    widget.setFixedWidth(408)
+    widget.setFixedHeight(500)
+    widget.addWidget(Menu_f)
+    widget.addWidget(NV_f)
+    widget.addWidget(VeXe_f)
+    widget.addWidget(ThanhVien_f)
+    widget.addWidget(Cam_f)
+    widget.setCurrentIndex(0)
+    widget.show()
+    sys.exit(app.exec_())

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1094</width>
+    <width>1042</width>
     <height>739</height>
    </rect>
   </property>
@@ -199,7 +199,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1094</width>
+     <width>1042</width>
      <height>21</height>
     </rect>
    </property>
@@ -207,7 +207,7 @@
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources>
-  <include location="../Downloads/resource.qrc"/>
+  <include location="resource.qrc"/>
  </resources>
  <connections/>
 </ui>
