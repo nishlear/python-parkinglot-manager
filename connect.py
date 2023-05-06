@@ -47,14 +47,23 @@ def showStaff():
     #     print(row)
     return result
 
-def updateStaff(staffID, name=None, plate=None):
+def showStaffwithAccount():
+    cursor.execute("""
+    SELECT s.staffID, s.name, s.phone, a.username, a.password
+    FROM staff s
+    LEFT JOIN account a ON s.staffID = a.staffID;
+    """)
+    result = cursor.fetchall()
+    return result
+
+def updateStaff(staffID, name=None, phone=None):
     sql = "UPDATE staff SET "
     updates = []
 
     if name is not None:
         updates.append(f"name='{name}'")
-    if plate is not None:
-        updates.append(f"plate='{plate}'")
+    if phone is not None:
+        updates.append(f"phone='{phone}'")
 
     if len(updates) == 0:
         return # nothing to update
@@ -62,14 +71,14 @@ def updateStaff(staffID, name=None, plate=None):
     sql += ",".join(updates) + f" WHERE staffID={staffID}"
     cursor.execute(sql)
     mydb.commit()
-    print(f"Staff with ID {staffID} updated successfully")
+    print(f"Thông tin nhân viên ID {staffID} đã được cập nhật")
 
 def findStaff(x, y):
     sql = f"SELECT * FROM staff WHERE {x} = '{y}'"
     cursor.execute(sql)
     data = cursor.fetchall()
     return data
-
+print(findStaff("name", 'Tran Khoa'))
 # member
 def addMember(name, plate):
     sql = "INSERT INTO member (name, plate) VALUES (%s, %s)"
@@ -100,7 +109,7 @@ def updateMember(memberID, name=None, plate=None):
     sql += ",".join(updates) + f" WHERE memberID={memberID}"
     cursor.execute(sql)
     mydb.commit()
-    print(f"Member with ID {memberID} updated successfully")
+    print(f"Cập nhật thông tin thành viên ID {memberID} thành công.")
 
 def showMember():
     sql = "SELECT * FROM member"
@@ -116,6 +125,10 @@ def findMember(x, y):
     cursor.execute(sql)
     data = cursor.fetchall()
     return data
+
+def member_getColumnName(column_index):
+    column_names = ["memberID", "name", "plate"]
+    return column_names[column_index]
 
 # ticket
 def addTicket(staffID, plate, vehicletype): # Quet xe di vao
@@ -146,6 +159,7 @@ def addTicket(staffID, plate, vehicletype): # Quet xe di vao
 
     print(f"Xe {plate} đã được thêm vào database.")
 # addTicket(8, '43-A3 99999', 2)
+# addTicket(11, '32-S2 81221', 0)
 def saveTicket(plate): # Quet xe di ra
     sql = "UPDATE ticket SET time_out = %s WHERE plate = %s"
     val = (current_time, plate)
@@ -203,6 +217,7 @@ def findTicket(x, y):
     cursor.execute(sql)
     data = cursor.fetchall()
     return data
+
 # account
 def createAccount(staffID, username, password):
     sql = "INSERT INTO account VALUES (%s, %s, %s, %s)"
@@ -244,5 +259,20 @@ def showAccount():
         # print(row)
     return result
 
+def updateAccount(staffID, username=None, password=None):
+    sql = "UPDATE account SET "
+    updates = []
 
-# print(showTicket())
+    if username is not None:
+        updates.append(f"username='{username}'")
+    if password is not None:
+        updates.append(f"password='{password}'")
+
+    if len(updates) == 0:
+        return # nothing to update
+
+    sql += ",".join(updates) + f" WHERE staffID={staffID}"
+    cursor.execute(sql)
+    mydb.commit()
+    print(f"Tài khoản nhân viên ID {staffID} đã được cập nhật")
+# print(showStaff()[0][1])
