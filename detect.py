@@ -26,8 +26,9 @@ def add_detail(frame, detections):
         labels=labels
     )
 
-def detection_result(frame, yolov8_result):
-    detections = sv.Detections.from_yolov8(yolov8_result)
+def detection_result(frame):
+    result = model(frame)[0]
+    detections = sv.Detections.from_yolov8(result)
     add_detail(frame, detections)
 
     if (detections):
