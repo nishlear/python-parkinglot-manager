@@ -761,15 +761,18 @@ class MainWindow(QDialog):
         self.uic.CAPTURE_BTN.clicked.connect(self.capture_xehoi)
         self.uic.CAPTURE_BTN_2.clicked.connect(self.capture_xemay)
         self.uic.CAPTURE_BTN_3.clicked.connect(self.capture_xedap)
+        self.uic.PASS_BTN.clicked.connect(self.checkout)
 
         self.pushButton = self.findChild(QtWidgets.QPushButton, "pushButton")
         self.pushButton.clicked.connect(self.EXIT)
 
+    def checkout(self):
+        pass
+
     def getStaffName(self, index):
         name = self.uic.comboBox.itemText(index)
-        connect.findStaff("name", name)
-        
-
+        staffID = connect.findStaff("name", name)[0]
+        self.selected_staff_id = staffID
 
     def EXIT(self):
         widget.setFixedWidth(850)
@@ -777,17 +780,26 @@ class MainWindow(QDialog):
         widget.setCurrentIndex(1)
 
     def capture_xehoi(self):
+        vehicletype = 2
         self.uic.label_ngaygio.setText(connect.current_time)
         frame = self.thread.get_capture_frame()
         plate = detect.detection_result(frame)
-
-        pass
+        connect.addTicket(self.selected_staff_id, plate, vehicletype)
 
     def capture_xemay(self):
-        pass
+        vehicletype = 1
+        self.uic.label_ngaygio.setText(connect.current_time)
+        frame = self.thread.get_capture_frame()
+        plate = detect.detection_result(frame)
+        connect.addTicket(self.selected_staff_id, plate, vehicletype)
 
     def capture_xedap(self):
-        pass
+        vehicletype = 0
+        self.uic.label_ngaygio.setText(connect.current_time)
+        frame = self.thread.get_capture_frame()
+        plate = detect.detection_result(frame)
+        connect.addTicket(self.selected_staff_id, plate, vehicletype)
+        # qrcode.generate_qrcode()
 
     # def capture_frame(self):
     #     # Get the current date and time
@@ -827,6 +839,13 @@ if __name__ == '__main__':
     VeXe_f = VeXe()
     ThanhVien_f = ThanhVien()
     Cam_f = MainWindow()
+    mydb = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="1234",
+        database='parking'
+    )
+    con = mydb.cursor()
     widget.addWidget(Login_f)
     widget.setFixedWidth(408)
     widget.setFixedHeight(500)
