@@ -1,14 +1,16 @@
 import mysql.connector
 import numpy as np
 import cv2
+from datetime import datetime
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QThread,QDateTime
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QThread,QDateTime, QCoreApplication, Qt
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QLabel
 from PyQt5.uic import loadUi
+from PIL.ImageQt import ImageQt
 from mainGUI import Ui_Dialog
 
 import os
@@ -16,7 +18,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import connect
 import detect
-import qrcode
+import ticketcode
 class Login(QMainWindow):
     def __init__(self):
         super(Login, self).__init__()
@@ -765,9 +767,21 @@ class MainWindow(QDialog):
 
         self.pushButton = self.findChild(QtWidgets.QPushButton, "pushButton")
         self.pushButton.clicked.connect(self.EXIT)
+        
+    def display_qr(self, qr_image):
+        qimage = ImageQt(qr_image)
+        pixmap = QPixmap.fromImage(QImage(qimage))
+        scaled_pixmap = pixmap.scaled(self.uic.prt_sc.size(), aspectRatioMode = Qt.KeepAspectRatio)
+        self.uic.prt_sc.setPixmap(scaled_pixmap)
 
     def checkout(self):
-        pass
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        frame = self.thread.get_capture_frame()
+        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        plate = ticketcode.scanqrcode(image)
+        self.uic.label_biensoxe.setText(plate)
+        self.uic.label_ngaygio.setText(current_time)
+        connect.saveTicket(plate)
 
     def getStaffName(self, index):
         name = self.uic.comboBox.itemText(index)
@@ -781,23 +795,35 @@ class MainWindow(QDialog):
 
     def capture_xehoi(self):
         vehicletype = 2
-        self.uic.label_ngaygio.setText(connect.current_time)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.uic.label_ngaygio.setText(current_time)
+        QCoreApplication.processEvents()
         frame = self.thread.get_capture_frame()
-        plate = detect.detection_result(frame)
+        plate = str(detect.detection_result(frame))
+        self.uic.label_biensoxe.setText(plate)
         connect.addTicket(self.selected_staff_id, plate, vehicletype)
+
+        qr = ticketcode.generate_qrcode(plate)
+        self.display_qr(qr)
 
     def capture_xemay(self):
         vehicletype = 1
-        self.uic.label_ngaygio.setText(connect.current_time)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.uic.label_ngaygio.setText(current_time)
+        QCoreApplication.processEvents()
         frame = self.thread.get_capture_frame()
-        plate = detect.detection_result(frame)
+        plate = str(detect.detection_result(frame))
+        self.uic.label_biensoxe.setText(plate)
         connect.addTicket(self.selected_staff_id, plate, vehicletype)
 
     def capture_xedap(self):
         vehicletype = 0
-        self.uic.label_ngaygio.setText(connect.current_time)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.uic.label_ngaygio.setText(current_time)
+        QCoreApplication.processEvents()
         frame = self.thread.get_capture_frame()
-        plate = detect.detection_result(frame)
+        plate = str(detect.detection_result(frame))
+        self.uic.label_biensoxe.setText(plate)
         connect.addTicket(self.selected_staff_id, plate, vehicletype)
         # qrcode.generate_qrcode()
 
