@@ -7,7 +7,7 @@ mydb = mysql.connector.connect(
   database='parking'
 )
 cursor = mydb.cursor()
-current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 
 # staff
 def addStaff(name, phone):
@@ -74,11 +74,16 @@ def updateStaff(staffID, name=None, phone=None):
     print(f"Thông tin nhân viên ID {staffID} đã được cập nhật")
 
 def findStaff(x, y):
+    sql = f"SELECT * FROM staff WHERE {x} = '{y}' LIMIT 1"
+    cursor.execute(sql)
+    data = cursor.fetchone()
+    return data
+
+def findStaff2(x, y):
     sql = f"SELECT * FROM staff WHERE {x} = '{y}'"
     cursor.execute(sql)
     data = cursor.fetchall()
     return data
-print(findStaff("name", 'Tran Khoa'))
 # member
 def addMember(name, plate):
     sql = "INSERT INTO member (name, plate) VALUES (%s, %s)"
@@ -133,6 +138,7 @@ def member_getColumnName(column_index):
 # ticket
 def addTicket(staffID, plate, vehicletype): # Quet xe di vao
     # Check if plate is already registered in database as a member
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     sql = "SELECT memberID FROM member WHERE plate = %s"
     val = (plate,)
     cursor.execute(sql, val)
@@ -161,6 +167,7 @@ def addTicket(staffID, plate, vehicletype): # Quet xe di vao
 # addTicket(8, '43-A3 99999', 2)
 # addTicket(11, '32-S2 81221', 0)
 def saveTicket(plate): # Quet xe di ra
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     sql = "UPDATE ticket SET time_out = %s WHERE plate = %s"
     val = (current_time, plate)
     cursor.execute(sql, val)
