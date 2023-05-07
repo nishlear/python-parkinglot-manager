@@ -1,4 +1,4 @@
-﻿CREATE DATABASE parking;
+CREATE DATABASE parking;
 USE parking;
 
 CREATE TABLE member(
@@ -29,8 +29,24 @@ CREATE TABLE ticket(
     FOREIGN KEY (memberID) REFERENCES member(memberID)
 );
 
+CREATE TABLE account(
+	usernameID int NOT NULL AUTO_INCREMENT,
+    staffID int NOT NULL,
+	username varchar(255),
+    password varchar(255),
+    PRIMARY KEY (usernameID),
+    FOREIGN KEY (staffID) REFERENCES staff(staffID)
+);
+
 ALTER TABLE ticket ADD UNIQUE (plate);
 ALTER TABLE staff ADD UNIQUE (phone);
+
+INSERT INTO account (staffID, username, password)
+VALUES (1, 'admin', 'admin');
+
+
+
+
 
 
 
