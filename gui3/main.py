@@ -816,6 +816,9 @@ class MainWindow(QDialog):
         self.uic.label_biensoxe.setText(plate)
         connect.addTicket(self.selected_staff_id, plate, vehicletype)
 
+        qr = ticketcode.generate_qrcode(plate)
+        self.display_qr(qr)
+
     def capture_xedap(self):
         vehicletype = 0
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -825,7 +828,9 @@ class MainWindow(QDialog):
         plate = str(detect.detection_result(frame))
         self.uic.label_biensoxe.setText(plate)
         connect.addTicket(self.selected_staff_id, plate, vehicletype)
-        # qrcode.generate_qrcode()
+
+        qr = ticketcode.generate_qrcode(plate)
+        self.display_qr(qr)
 
     # def capture_frame(self):
     #     # Get the current date and time
